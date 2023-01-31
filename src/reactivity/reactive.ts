@@ -1,5 +1,5 @@
 import { track, trigger } from "./effect"
-export function reactivity(raw: any){
+export function reactive(raw: any){
   return new Proxy(raw, {
     get(target, key){
       const res =  Reflect.get(target, key)
@@ -10,6 +10,11 @@ export function reactivity(raw: any){
       const res =  Reflect.set(target, key, value)
       trigger(target, key)
       return res
-    }
+    },
+    deleteProperty(target, key) {
+      const res = Reflect.deleteProperty(target, key)
+      trigger(target, key)
+      return res
+    },
   })
 }
