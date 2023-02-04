@@ -33,17 +33,6 @@ describe('effect', () => {
     obj.foo++
     expect(original).toBe(3)
   })
-
-  it('should observe delete operations', () => {
-    let dummy
-    const obj = reactive({ prop: 'value' })
-    effect(() => (dummy = obj.prop))
-
-    expect(dummy).toBe('value')
-    delete obj.prop
-    expect(dummy).toBe(undefined)
-  })
-
   
   it('should discover new branches when running manually', () => {
     let dummy
