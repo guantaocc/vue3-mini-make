@@ -16,25 +16,38 @@ export function track(target, key){
      depsMap.set(key, dep)
    }
 
-   if (!dep.has(activeEffect) && activeEffect) {
-     // 在effect上挂载 deps进行删除
-     dep.add(activeEffect);
-     (activeEffect as any).deps.push(dep);
-   }
+   trackEffects(dep)
 }
+
+export function trackEffects(dep){
+  if (!dep.has(activeEffect) && activeEffect) {
+    // 在effect上挂载 deps进行删除
+    dep.add(activeEffect);
+    (activeEffect as any).deps.push(dep);
+  }
+}
+
+
+export function triggerEffects(dep) {
+  // 执行收集到的所有的 effect 的 run 方法
+  for (const effect of dep) {
+    if (effect.scheduler) {
+      // scheduler 可以让用户自己选择调用的时机
+      // 这样就可以灵活的控制调用了
+      // 在 runtime-core 中，就是使用了 scheduler 实现了在 next ticker 中调用的逻辑
+      effect.scheduler();
+    } else {
+      effect.run();
+    }
+  }
+}
+
 
 export function trigger(target, key){
   // 触发依赖
   let depsMap = targetMap.get(target)
   let dep = depsMap.get(key)
-  dep.forEach((effect: any) => {
-    // dep => activeEffect
-    if(effect.scheduler){
-      effect.scheduler()
-    }else {
-      effect.run()
-    }
-  })
+  triggerEffects(dep)
 }
 
 export function stop(runner: any){
@@ -48,6 +61,7 @@ function cleanupEffect(effect){
   })
   effect.deps.length = 0
 }
+
 
 class ReactiveEffect {
   public _fn: any;
